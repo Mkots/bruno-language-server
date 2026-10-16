@@ -94,7 +94,7 @@ export function checkDuplicateBlocks(
     }
   });
 
-  const bodyBlocks = blocks.filter(b => b.name.startsWith('body:'));
+  const bodyBlocks = blocks.filter(b => b.name.startsWith('body:') && b.name !== 'body:graphql:vars');
   if (bodyBlocks.length > 1) {
     bodyBlocks.forEach((block, idx) => {
       if (idx > 0) {

@@ -43,6 +43,7 @@ export const VALID_BLOCKS = [
 export const UNIQUE_BLOCKS = new Set([
   'meta',
   'settings',
+  'body:graphql:vars',
   ...HTTP_METHODS,
 ]);
 

@@ -95,6 +95,16 @@ test('newer Bruno block types are accepted', () => {
   assert.deepStrictEqual(diagnose(text).filter(d => d.message.startsWith('Unknown block')), []);
 });
 
+test('body:graphql with body:graphql:vars is not a duplicate body', () => {
+  const text = `meta {\n  name: T\n  type: graphql\n  seq: 1\n}\n\npost {\n  url: https://x.com\n}\n\nbody:graphql {\n  x: 1\n}\n\nbody:graphql:vars {\n  x: 1\n}\n`;
+  assert.deepStrictEqual(diagnose(text).filter(d => d.code === 'duplicate-body'), []);
+});
+
+test('duplicate body:graphql:vars blocks are reported', () => {
+  const text = `meta {\n  name: T\n  type: graphql\n  seq: 1\n}\n\npost {\n  url: https://x.com\n}\n\nbody:graphql:vars {\n  x: 1\n}\n\nbody:graphql:vars {\n  y: 2\n}\n`;
+  assert.ok(diagnose(text).some(d => d.code === 'duplicate-block'));
+});
+
 test('duplicate http methods are reported', () => {
   const text = `meta {\n  name: T\n  type: http\n  seq: 1\n}\n\nget {\n  url: https://x.com\n}\n\npost {\n  url: https://x.com\n}\n`;
   assert.ok(diagnose(text).length > 0);
