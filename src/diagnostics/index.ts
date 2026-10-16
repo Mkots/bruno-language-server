@@ -251,14 +251,14 @@ function validateVariableSyntax(line: string, lineNum: number): Diagnostic[] {
       );
     }
 
-    if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(variableName)) {
+    if (!/^\$?[a-zA-Z_][\w.-]*$/.test(variableName)) {
       diagnostics.push(
         createDiagnostic({
           severity: DiagnosticSeverity.Warning,
           line: lineNum,
           startChar: match.index,
           endChar: match.index + match[0].length,
-          message: `Invalid variable name: '${variableName}'. Use alphanumeric and underscores only`,
+          message: `Invalid variable name: '${variableName}'. Use letters, digits, '_', '.', '-' and an optional leading '$'`,
           code: DiagnosticCode.InvalidVariable,
         })
       );
