@@ -269,10 +269,11 @@ function validateVariableSyntax(line: string, lineNum: number): Diagnostic[] {
 }
 
 function isValidUrl(url: string): boolean {
-  if (url.startsWith('{{') && url.endsWith('}}')) {
+  // shortcut: the resolved URL can't be checked statically
+  if (url.includes('{{')) {
     return true;
   }
-  
+
   try {
     new URL(url);
     return true;
