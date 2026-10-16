@@ -82,3 +82,20 @@ test('two script:pre-request blocks are still duplicates', () => {
   const d = diagnose(wrap('script:pre-request {\n  a();\n}\n\nscript:pre-request {\n  b();\n}'));
   assert.strictEqual(d.filter(x => x.code === 'duplicate-script').length, 1);
 });
+
+test('{{ }} inside script, tests and docs is not validated as a variable', () => {
+  const text = `meta {\n  name: T\n  type: http\n  seq: 1\n}\n\nget {\n  url: https://x.com\n}\n\nscript:pre-request {\n  const a = {{ b: 1 }};\n}\n\ndocs {\n  {{ not a var }}\n}\n`;
+  assert.deepStrictEqual(diagnose(text), []);
+});
+
+test('newer Bruno block types are accepted', () => {
+  const extra = ['vars:pre-request', 'vars:post-response', 'auth:oauth2', 'body:graphql', 'body:graphql:vars'];
+  const text = `meta {\n  name: T\n  type: http\n  seq: 1\n}\n\nget {\n  url: https://x.com\n}\n\n` +
+    extra.map(b => `${b} {\n  x: 1\n}\n`).join('\n');
+  assert.deepStrictEqual(diagnose(text).filter(d => d.message.startsWith('Unknown block')), []);
+});
+
+test('duplicate http methods are reported', () => {
+  const text = `meta {\n  name: T\n  type: http\n  seq: 1\n}\n\nget {\n  url: https://x.com\n}\n\npost {\n  url: https://x.com\n}\n`;
+  assert.ok(diagnose(text).length > 0);
+});

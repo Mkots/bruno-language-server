@@ -1,6 +1,6 @@
 import { BLOCK_START_PATTERN } from '../constants';
 
-export interface BruBlock {
+interface BruBlock {
   name: string;
   startLine: number;
   endLine: number;
@@ -15,7 +15,7 @@ export function findBlocks(lines: string[]): BruBlock[] {
 
   for (let i = 0; i < lines.length; i++) {
     if (open) {
-      if (lines[i].trimEnd() === '}' && lines[i][0] === '}') {
+      if (/^}\s*$/.test(lines[i])) {
         open.endLine = i;
         blocks.push(open);
         open = null;

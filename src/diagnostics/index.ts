@@ -51,7 +51,10 @@ export function validateBruDocument(textDocument: TextDocument): Diagnostic[] {
       diagnostics.push(...validateBlockContent(block, line, i));
     }
 
-    diagnostics.push(...validateVariableSyntax(line, i));
+    // `{{ }}` in script/tests/docs is code or prose, not a Bruno variable
+    if (!block || !/^(script:|tests$|docs$)/.test(block)) {
+      diagnostics.push(...validateVariableSyntax(line, i));
+    }
   }
 
   if (!hasHttpMethod) {
