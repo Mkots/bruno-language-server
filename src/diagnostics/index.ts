@@ -4,6 +4,7 @@ import {
 } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { checkDuplicateBlocks } from './duplicates';
+import { findBlocks } from './blocks';
 import {
   HTTP_METHODS,
   VALID_META_TYPES,
@@ -22,40 +23,32 @@ export function validateBruDocument(textDocument: TextDocument): Diagnostic[] {
 
   let hasHttpMethod = false;
   let hasMeta = false;
-  let currentBlock: string | null = null;
-  let blockStartLine = 0;
+  const blockAtLine = new Map<number, string>();
+
+  for (const { name, startLine, endLine } of findBlocks(lines)) {
+    if (HTTP_METHODS.includes(name as any)) {
+      hasHttpMethod = true;
+    }
+
+    if (name === 'meta') {
+      hasMeta = true;
+      diagnostics.push(...validateMetaBlock(lines, startLine, endLine));
+    }
+
+    diagnostics.push(...validateBlockName(name, startLine, lines[startLine]));
+
+    for (let i = startLine + 1; i < endLine; i++) {
+      blockAtLine.set(i, name);
+    }
+  }
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    const trimmedLine = line.trim();
+    if (line.trim() === '') continue;
 
-    if (trimmedLine === '') continue;
-
-    const blockMatch = trimmedLine.match(/^(\w+(?::\w+)?)\s*\{/);
-    if (blockMatch) {
-      currentBlock = blockMatch[1];
-      blockStartLine = i;
-
-      if (HTTP_METHODS.includes(currentBlock as any)) {
-        hasHttpMethod = true;
-      }
-
-      if (currentBlock === 'meta') {
-        hasMeta = true;
-      }
-
-      diagnostics.push(...validateBlockName(currentBlock, i, line));
-    }
-
-    if (trimmedLine === '}') {
-      if (currentBlock === 'meta') {
-        diagnostics.push(...validateMetaBlock(lines, blockStartLine, i));
-      }
-      currentBlock = null;
-    }
-
-    if (currentBlock && !trimmedLine.endsWith('{') && trimmedLine !== '}') {
-      diagnostics.push(...validateBlockContent(currentBlock, line, i));
+    const block = blockAtLine.get(i);
+    if (block) {
+      diagnostics.push(...validateBlockContent(block, line, i));
     }
 
     diagnostics.push(...validateVariableSyntax(line, i));
@@ -209,7 +202,7 @@ function validateBlockContent(blockName: string, line: string, lineNum: number):
   }
 
   if (blockName.startsWith('body:json')) {
-    if (trimmed && !trimmed.startsWith('{') && !trimmed.startsWith('[') && !trimmed.startsWith('"')) {
+    if (trimmed && !/^[{}[\]"]/.test(trimmed)) {
       try {
         JSON.parse(trimmed);
       } catch (e) {

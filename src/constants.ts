@@ -6,7 +6,7 @@ export const VALID_META_TYPES = ['http', 'graphql'] as const;
 
 export const REQUIRED_META_FIELDS = ['name', 'type'] as const;
 
-export const BLOCK_START_PATTERN = /^(\w+(?::\w+)?)\s*\{/;
+export const BLOCK_START_PATTERN = /^(\w+(?::[\w-]+)?)\s*\{/;
 
 export const VALID_BLOCKS = [
   ...HTTP_METHODS,
